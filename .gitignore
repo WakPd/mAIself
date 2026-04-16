@@ -48,6 +48,3 @@ app.*.map.json
 .env
 .env.*
 !.env.example
-
-# Android generated build outputs
-/android/build/

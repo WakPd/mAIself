@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/repositories/auth_repository.dart';
 
 // ─── Sealed State ────────────────────────────────────────────────────────────
@@ -39,9 +40,27 @@ final class AuthError extends AuthState {
 // ─── Notifier ─────────────────────────────────────────────────────────────────
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthInitial());
+  AuthNotifier() : super(const AuthInitial()) {
+    _initAuthListener();
+  }
 
   final _repository = AuthRepository();
+
+  void _initAuthListener() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session != null) {
+        // Optionnel : ne pas forcer s'il y a déjà AuthRegistered
+        if (state is! AuthRegistered) {
+          state = const AuthAuthenticated();
+        }
+      } else {
+        if (state is! AuthRegistered && state is! AuthLoading) {
+          state = const AuthUnauthenticated();
+        }
+      }
+    });
+  }
 
   Future<void> login(String email, String password) async {
     state = const AuthLoading();
@@ -91,7 +110,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (raw.contains('Email not confirmed')) {
       return 'Confirme ton e-mail avant de te connecter.';
     }
-    if (raw.contains('over_email_send_rate_limit') || raw.contains('rate limit exceeded')) {
+    if (raw.contains('over_email_send_rate_limit') ||
+        raw.contains('rate limit exceeded')) {
       return 'Trop de tentatives. Attends un peu avant de réessayer ou désactive la confirmation email sur Supabase.';
     }
     if (raw.contains('network') || raw.contains('SocketException')) {

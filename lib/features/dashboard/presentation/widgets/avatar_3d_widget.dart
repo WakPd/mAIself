@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/providers/metrics_provider.dart';
 
 // ─── État Avatar ──────────────────────────────────────────────────────────────
-
 enum AvatarState { energized, normal, tired, focused }
 
 AvatarState computeAvatarState(MetricsState m) {
@@ -15,10 +14,8 @@ AvatarState computeAvatarState(MetricsState m) {
 }
 
 // ─── Avatar 3D Widget ─────────────────────────────────────────────────────────
-
 class Avatar3DWidget extends StatefulWidget {
   final MetricsState metrics;
-
   const Avatar3DWidget({super.key, required this.metrics});
 
   @override
@@ -31,7 +28,6 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
   late AnimationController _pulseCtrl;
   late AnimationController _floatCtrl;
   late AnimationController _stateTransitionCtrl;
-
   late Animation<double> _rotationAnim;
   late Animation<double> _pulseAnim;
   late Animation<double> _floatAnim;
@@ -42,22 +38,18 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
   @override
   void initState() {
     super.initState();
-
     _rotationCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),
     )..repeat();
-
     _pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-
     _floatCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..repeat(reverse: true);
-
     _stateTransitionCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -83,7 +75,6 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
       _currentState = newState;
       _stateTransitionCtrl.forward(from: 0);
     }
-
     // Ajuste la vitesse de rotation selon l'énergie
     final speed = 4 + (widget.metrics.energy * 8);
     _rotationCtrl.duration = Duration(milliseconds: (speed * 1000).toInt());
@@ -107,7 +98,6 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
       builder: (context, child) {
         final t = _stateTransitionCtrl.value;
         final colors = _lerpStateColors(_previousState, _currentState, t);
-
         return Transform.translate(
           offset: Offset(0, _floatAnim.value),
           child: Transform.scale(
@@ -166,11 +156,11 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
   }
 
   Widget _buildStateBadge(AvatarState state, _AvatarColors colors) {
-    final (label, icon) = switch (state) {
-      AvatarState.energized => ('En pleine forme', Icons.bolt_rounded),
-      AvatarState.normal => ('Équilibré', Icons.spa_rounded),
-      AvatarState.tired => ('Fatigué', Icons.bedtime_rounded),
-      AvatarState.focused => ('Déterminé', Icons.psychology_rounded),
+    final (label, emoji) = switch (state) {
+      AvatarState.energized => ('En pleine forme', '⚡'),
+      AvatarState.normal => ('Équilibré', '🌿'),
+      AvatarState.tired => ('Fatigué', '😴'),
+      AvatarState.focused => ('Déterminé', '🎯'),
     };
 
     return AnimatedContainer(
@@ -189,21 +179,14 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
           ),
         ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 14),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
+      child: Text(
+        '$emoji $label',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -223,35 +206,34 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
   _AvatarColors _colorsForState(AvatarState state) {
     return switch (state) {
       AvatarState.energized => _AvatarColors(
-          primary: const Color(0xFF00E676),
-          secondary: const Color(0xFF00BCD4),
-          accent: const Color(0xFF76FF03),
-          skin: const Color(0xFFB2DFDB),
-        ),
+            primary: const Color(0xFF00E676),
+            secondary: const Color(0xFF00BCD4),
+            accent: const Color(0xFF76FF03),
+            skin: const Color(0xFFB2DFDB),
+          ),
       AvatarState.normal => _AvatarColors(
-          primary: const Color(0xFF4FC3F7),
-          secondary: const Color(0xFF7E57C2),
-          accent: const Color(0xFF29B6F6),
-          skin: const Color(0xFFB3E5FC),
-        ),
+            primary: const Color(0xFF4FC3F7),
+            secondary: const Color(0xFF7E57C2),
+            accent: const Color(0xFF29B6F6),
+            skin: const Color(0xFFB3E5FC),
+          ),
       AvatarState.tired => _AvatarColors(
-          primary: const Color(0xFF78909C),
-          secondary: const Color(0xFF546E7A),
-          accent: const Color(0xFF90A4AE),
-          skin: const Color(0xFFCFD8DC),
-        ),
+            primary: const Color(0xFF78909C),
+            secondary: const Color(0xFF546E7A),
+            accent: const Color(0xFF90A4AE),
+            skin: const Color(0xFFCFD8DC),
+          ),
       AvatarState.focused => _AvatarColors(
-          primary: const Color(0xFFFF6F00),
-          secondary: const Color(0xFFE91E63),
-          accent: const Color(0xFFFFAB40),
-          skin: const Color(0xFFFFCCBC),
-        ),
+            primary: const Color(0xFFFF6F00),
+            secondary: const Color(0xFFE91E63),
+            accent: const Color(0xFFFFAB40),
+            skin: const Color(0xFFFFCCBC),
+          ),
     };
   }
 }
 
 // ─── Couleurs ─────────────────────────────────────────────────────────────────
-
 class _AvatarColors {
   final Color primary;
   final Color secondary;
@@ -267,7 +249,6 @@ class _AvatarColors {
 }
 
 // ─── CustomPainter : Humanoïde holographique ─────────────────────────────────
-
 class _HolographicAvatarPainter extends CustomPainter {
   final double rotationAngle;
   final _AvatarColors colors;
@@ -537,6 +518,7 @@ class _HolographicAvatarPainter extends CustomPainter {
 
     for (final xOff in [-gap, gap]) {
       final lx = cx + xOff;
+
       // Légère marche
       final walk = math.sin(rotationAngle * 2 + (xOff > 0 ? math.pi : 0)) * 3;
 
@@ -550,16 +532,16 @@ class _HolographicAvatarPainter extends CustomPainter {
       ));
 
       canvas.drawPath(
-          legPath,
-          Paint()
-            ..color = colors.secondary.withValues(alpha: 0.7)
-            ..style = PaintingStyle.fill);
+        legPath,
+        Paint()
+          ..color = colors.secondary.withValues(alpha: 0.7)
+          ..style = PaintingStyle.fill);
       canvas.drawPath(
-          legPath,
-          Paint()
-            ..color = colors.primary.withValues(alpha: 0.6)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.0);
+        legPath,
+        Paint()
+          ..color = colors.primary.withValues(alpha: 0.6)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0);
     }
   }
 
@@ -573,6 +555,7 @@ class _HolographicAvatarPainter extends CustomPainter {
     for (int i = 0; i < 3; i++) {
       final radius = 65.0 + i * 18;
       final angle = rotationAngle + (i * math.pi / 3);
+
       canvas.drawOval(
         Rect.fromCenter(
             center: Offset(cx, cy - 20),
@@ -596,7 +579,6 @@ class _HolographicAvatarPainter extends CustomPainter {
   void _drawParticles(
       Canvas canvas, double cx, double cy, double cosA, double sinA) {
     final rng = math.Random(42);
-
     // Nombre de particules selon l'énergie
     final particleCount = (energy * 20).toInt() + 5;
 
@@ -606,8 +588,8 @@ class _HolographicAvatarPainter extends CustomPainter {
       final angle = i * (2 * math.pi / particleCount) + rotationAngle;
       final px = cx + r * math.cos(angle);
       final py = (cy - 20) + r * 0.4 * math.sin(angle);
-
       final opacity = (math.sin(t * math.pi * 2 + i) * 0.5 + 0.5) * 0.7;
+
       canvas.drawCircle(
         Offset(px, py),
         1.5 + rng.nextDouble() * 2,
@@ -620,7 +602,6 @@ class _HolographicAvatarPainter extends CustomPainter {
     // Lignes de scan holographique
     final scanY =
         ((rotationAngle / (2 * math.pi)) * size.height * 1.5) % size.height;
-
     final scanPaint = Paint()
       ..shader = LinearGradient(
         colors: [
@@ -629,7 +610,6 @@ class _HolographicAvatarPainter extends CustomPainter {
           Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, scanY - 15, size.width, 30));
-
     canvas.drawRect(
       Rect.fromLTWH(0, scanY - 15, size.width, 30),
       scanPaint,
@@ -655,6 +635,7 @@ class _HolographicAvatarPainter extends CustomPainter {
         gridPaint,
       );
     }
+
     for (int j = -1; j <= 2; j++) {
       final t = (j + 1) / 3;
       final w = gridW * (0.3 + 0.7 * t);

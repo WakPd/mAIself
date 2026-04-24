@@ -175,6 +175,15 @@ class MetricsNotifier extends StateNotifier<MetricsState> {
       ),
     );
   }
+
+  void setMetrics(double energy, double sleep, double focus) {
+    state = state.copyWith(
+      energy: energy.clamp(0.0, 1.0),
+      sleep: sleep.clamp(0.0, 1.0),
+      focus: focus.clamp(0.0, 1.0),
+    );
+    _persist();
+  }
 }
 
 final metricsProvider =

@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../../../core/providers/ai_provider.dart';
 import '../../../../core/providers/metrics_provider.dart';
+import 'package:maiself/features/dashboard/presentation/providers/avatar_provider.dart';
+import 'package:maiself/presentation/widgets/avatar_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/avatar_3d_widget.dart';
 
@@ -38,6 +40,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final scanState = ref.watch(scanMealProvider);
     final metrics = ref.watch(metricsProvider);
+    final avatarStyle = ref.watch(avatarProvider);
 
     // ── Listener sur le scan ──────────────────────────────────────────────────
     ref.listen<AsyncValue<String?>>(scanMealProvider, (previous, next) {
@@ -84,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
-      appBar: _buildAppBar(avatarColor),
+      appBar: _buildAppBar(avatarColor, avatarStyle),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -153,8 +156,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── AppBar ──────────────────────────────────────────────────────────────────
 
-  PreferredSizeWidget _buildAppBar(Color avatarColor) {
+  PreferredSizeWidget _buildAppBar(Color avatarColor, AvatarStyle avatarStyle) {
     return AppBar(
+      leading: AvatarWidget(
+        size: 40,
+        skinColor: avatarStyle.skinColor,
+        hairColor: avatarStyle.hairColor,
+        clothingColor: avatarStyle.clothingColor,
+      ),
       title: const Text(
         'mAISelf 🧬',
         style: TextStyle(

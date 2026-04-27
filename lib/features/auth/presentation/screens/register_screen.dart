@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -35,9 +36,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AuthState>(authProvider, (_, state) {
-      if (state is AuthAuthenticated || state is AuthRegistered) {
+    ref.listen<AuthState>(authProvider, (previous, state) {
+      if (state is AuthAuthenticated) {
         context.go('/profile-setup');
+      } else if (state is AuthRegistered) {
+        if (Supabase.instance.client.auth.currentUser != null) {
+          context.go('/profile-setup');
+        } else if (previous is! AuthRegistered) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Inscription réussie. Confirme ton e-mail, puis reconnecte-toi.',
+              ),
+              backgroundColor: Colors.green.shade700,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       } else if (state is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

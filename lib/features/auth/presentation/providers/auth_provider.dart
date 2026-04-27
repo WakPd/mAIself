@@ -75,10 +75,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> register(String email, String password) async {
     state = const AuthLoading();
     try {
-      final userId = await _repository.signUp(email, password);
-      if (userId != null) {
-        // userId disponible → on va au profile-setup même sans session confirmée
-        state = AuthRegistered(userId);
+      final result = await _repository.signUp(email, password);
+      if (result.userId != null) {
+        if (result.hasSession) {
+          state = const AuthAuthenticated();
+        } else {
+          state = AuthRegistered(result.userId!);
+        }
       } else {
         state = const AuthError(
           'Inscription impossible. Vérifie ton e-mail et réessaie.',

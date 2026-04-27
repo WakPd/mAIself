@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import '../../../../core/providers/metrics_provider.dart';
 import '../../../../core/services/persistence_service.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../providers/auth_provider.dart';
@@ -136,12 +137,42 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
 
   Future<void> _submit() async {
     final userId = _getUserId();
-    if (userId == null) return;
+    if (userId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⚠️ Session expirée. Retourne te connecter.'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
 
     if (_ageCtrl.text.isEmpty || _poidsCtrl.text.isEmpty || _tailleCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Remplis toutes les informations de base')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('⚠️ Remplis toutes les informations de base')),
+        );
+      }
+      return;
+    }
+
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Tu dois être connecté pour finaliser ton profil.',
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      setState(() => _isLoading = false);
       return;
     }
 
@@ -149,17 +180,21 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
     try {
       // Sauvegarder dans Supabase
       final repo = AuthRepository();
+      final settings = _computeInitialSettings();
+      
       await repo.saveProfile(
-        userId,
+        currentUser.id,
         int.parse(_ageCtrl.text.trim()),
         _sexe,
         double.parse(_poidsCtrl.text.trim()),
         double.parse(_tailleCtrl.text.trim()),
         _activite,
+        (settings.baseEnergy * 100).toInt(),
+        (settings.baseSleep * 100).toInt(),
+        (settings.baseFocus * 100).toInt(),
       );
 
-      // Calculer et sauvegarder les settings locaux
-      final settings = _computeInitialSettings();
+      // Sauvegarder les settings locaux
       await PersistenceService.instance.saveUserSettings(userId, settings);
 
       // Sauvegarder le profil complet en local
@@ -177,6 +212,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
           regime: _regime,
         ),
       );
+
+      // Mettre à jour les métriques dans le provider
+      ref
+          .read(metricsProvider.notifier)
+          .setMetrics(settings.baseEnergy, settings.baseSleep, settings.baseFocus);
 
       if (mounted) context.go('/home');
     } catch (e) {

@@ -3,11 +3,17 @@
   final double weightKg;
   final String sex;
   final String activityLevel;
+  final int energy;
+  final int sleep;
+  final int concentration;
 
   const UserProfile({
     required this.age,
     required this.weightKg,
     required this.sex,
     required this.activityLevel,
+    required this.energy,
+    required this.sleep,
+    required this.concentration,
   });
 }

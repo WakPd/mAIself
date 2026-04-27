@@ -167,10 +167,10 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
 
   Widget _buildStateBadge(AvatarState state, _AvatarColors colors) {
     final (label, icon) = switch (state) {
-      AvatarState.energized => ('Énergisé', '⚡'),
-      AvatarState.normal => ('Équilibré', '🌿'),
-      AvatarState.tired => ('Fatigué', '😴'),
-      AvatarState.focused => ('Concentré', '🎯'),
+      AvatarState.energized => ('En pleine forme', Icons.bolt_rounded),
+      AvatarState.normal => ('Équilibré', Icons.spa_rounded),
+      AvatarState.tired => ('Fatigué', Icons.bedtime_rounded),
+      AvatarState.focused => ('Déterminé', Icons.psychology_rounded),
     };
 
     return AnimatedContainer(
@@ -189,14 +189,21 @@ class _Avatar3DWidgetState extends State<Avatar3DWidget>
           ),
         ],
       ),
-      child: Text(
-        '$icon $label',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

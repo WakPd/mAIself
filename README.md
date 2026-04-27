@@ -31,14 +31,20 @@ Le projet est en cours de structuration. L'architecture applicative est en place
 - Initialisation Supabase via variables d'environnement
 - Service Gemini present (placeholder, pret a brancher)
 
-## Fonctionnalites en cours / prochaines iterations
+## Fonctionnalités ajoutées / Dernières Mises à Jour (v1.1)
 
-- Authentification reelle Supabase (login/register/signout)
-- Analyse IA des repas (texte/image) via Gemini
-- Stockage historique des analyses dans Supabase
-- Score metabo dynamique (energie/sommeil/concentration)
-- Recommandations sport et nutrition personnalisees
-- UX mobile/web plus aboutie (etat loading, erreurs, empty states)
+- **Persistance Cloud (Supabase)** : Les métriques journalières (repas, jauges) sont désormais sauvegardées sur le Cloud via `Supabase.instance.client` au lieu du stockage local, ce qui garantit une synchronisation parfaite en temps réel entre toutes les plateformes (ex: Chrome Web et Android Mobile).
+- **Rétrocompatibilité Base de Données** : Ajout de tables SQL sécurisées (`daily_metrics`, `user_settings`) n'impactant pas les versions plus anciennes de l'application en cours de test.
+- **Onboarding Enrichi** : Un parcours guidé complet (3 pages) posant 5 questions essentielles (niveau de stress, sommeil, régimes) pour calibrer mathématiquement et sur-mesure les barres d'énergie, de concentration et de sommeil dès la création du jumeau numérique.
+- **Menu Profil et Paramétrages Avancés** : Écran `/profile` intégré permettant la mise à jour des paramètres biométriques (qui se synchronisent avec la base de données) et ajout de *sliders dynamiques* pour régler avec précision ses objectifs : Calories, Hydratation, Nombre de repas.
+- **UI / UX Professionnelle** : Les anciens "emojis textuels" ont été entièrement remplacés par des **Material Icons** de haute qualité (⚡, 🎯, 😴 deviennent des composants Flutter). L'avatar holographique dispose également de nouveaux états clairs ("En pleine forme", "Équilibré", "Fatigué", "Déterminé").
+- Navigation via GoRouter finalisée incluant `/profile`.
+
+## Fonctionnalités en cours / prochaines itérations
+
+- Score métabo dynamique complet (selon analyses poussées)
+- Recommandations sport et nutrition personnalisées côté backend
+- Optimisation des temps de chargement IA (Gemini)
 
 ## Stack technique
 

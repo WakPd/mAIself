@@ -3,16 +3,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../../../core/providers/ai_provider.dart';
 import '../../../../core/providers/metrics_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/avatar_3d_widget.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadMetrics();
+  }
+
+  Future<void> _loadMetrics() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      await ref.read(metricsProvider.notifier).loadForUser(userId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthUnauthenticated) context.go('/login');
     });
@@ -65,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
-      appBar: _buildAppBar(ref, avatarColor),
+      appBar: _buildAppBar(avatarColor),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -96,7 +115,7 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _MetricCard(
                     label: 'Énergie',
-                    emoji: '⚡',
+                    icon: Icons.bolt_rounded,
                     value: metrics.energy,
                     color: const Color(0xFF00E676),
                     subtitle: _metricLabel(metrics.energy),
@@ -104,7 +123,7 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _MetricCard(
                     label: 'Sommeil',
-                    emoji: '😴',
+                    icon: Icons.bedtime_rounded,
                     value: metrics.sleep,
                     color: const Color(0xFF4FC3F7),
                     subtitle: _metricLabel(metrics.sleep),
@@ -112,7 +131,7 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   _MetricCard(
                     label: 'Concentration',
-                    emoji: '🎯',
+                    icon: Icons.psychology_rounded,
                     value: metrics.focus,
                     color: const Color(0xFFFFAB40),
                     subtitle: _metricLabel(metrics.focus),
@@ -134,7 +153,7 @@ class HomeScreen extends ConsumerWidget {
 
   // ── AppBar ──────────────────────────────────────────────────────────────────
 
-  PreferredSizeWidget _buildAppBar(WidgetRef ref, Color avatarColor) {
+  PreferredSizeWidget _buildAppBar(Color avatarColor) {
     return AppBar(
       title: const Text(
         'mAISelf 🧬',
@@ -159,9 +178,14 @@ class HomeScreen extends ConsumerWidget {
       ),
       actions: [
         IconButton(
+          tooltip: 'Mon profil',
+          onPressed: () => context.push('/profile'),
+          icon: Icon(Icons.person_rounded, color: avatarColor),
+        ),
+        IconButton(
           tooltip: 'Se déconnecter',
           onPressed: () => ref.read(authProvider.notifier).logout(),
-          icon: Icon(Icons.logout_rounded, color: avatarColor),
+          icon: Icon(Icons.logout_rounded, color: avatarColor.withValues(alpha: 0.7)),
         ),
       ],
     );
@@ -378,8 +402,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               child: const Row(
                 children: [
-                  Text('🥗',
-                      style: TextStyle(fontSize: 22)),
+                  Icon(Icons.restaurant_menu_rounded, color: Colors.white, size: 22),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -741,7 +764,7 @@ class _DailyStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const calorieGoal = 2000;
+    final calorieGoal = metrics.calorieGoal;
     final calPercent = (metrics.totalCaloriesToday / calorieGoal).clamp(0.0, 1.0);
 
     return Column(
@@ -765,9 +788,9 @@ class _DailyStatsRow extends StatelessWidget {
               child: _DailyStat(
                 icon: Icons.restaurant_rounded,
                 label: 'Repas',
-                value: '${metrics.mealsToday} repas aujourd\'hui',
+                value: '${metrics.mealsToday} / ${metrics.mealsGoal} repas',
                 color: const Color(0xFF00E676),
-                progress: (metrics.mealsToday / 4).clamp(0.0, 1.0),
+                progress: (metrics.mealsToday / metrics.mealsGoal).clamp(0.0, 1.0),
               ),
             ),
           ],
@@ -945,14 +968,14 @@ class _MacroChip extends StatelessWidget {
 class _MetricCard extends StatelessWidget {
   const _MetricCard({
     required this.label,
-    required this.emoji,
+    required this.icon,
     required this.value,
     required this.color,
     required this.subtitle,
   });
 
   final String label;
-  final String emoji;
+  final IconData icon;
   final double value;
   final Color color;
   final String subtitle;
@@ -977,7 +1000,7 @@ class _MetricCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 20)),
+              Icon(icon, color: color, size: 20),
               const SizedBox(width: 10),
               Text(label,
                   style: const TextStyle(

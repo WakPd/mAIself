@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/persistence_service.dart';
 
 // ─── État des métriques enrichi ───────────────────────────────────────────────
 
@@ -16,6 +17,11 @@ class MetricsState {
   final int carbsGrams;
   final int fatGrams;
 
+  // Paramètres utilisateur
+  final int calorieGoal;
+  final double hydrationGoal;
+  final int mealsGoal;
+
   MetricsState({
     required this.energy,
     required this.sleep,
@@ -27,6 +33,9 @@ class MetricsState {
     this.proteinGrams = 0,
     this.carbsGrams = 0,
     this.fatGrams = 0,
+    this.calorieGoal = 2000,
+    this.hydrationGoal = 2.0,
+    this.mealsGoal = 3,
   });
 
   MetricsState copyWith({
@@ -40,6 +49,9 @@ class MetricsState {
     int? proteinGrams,
     int? carbsGrams,
     int? fatGrams,
+    int? calorieGoal,
+    double? hydrationGoal,
+    int? mealsGoal,
   }) {
     return MetricsState(
       energy: energy ?? this.energy,
@@ -52,6 +64,9 @@ class MetricsState {
       proteinGrams: proteinGrams ?? this.proteinGrams,
       carbsGrams: carbsGrams ?? this.carbsGrams,
       fatGrams: fatGrams ?? this.fatGrams,
+      calorieGoal: calorieGoal ?? this.calorieGoal,
+      hydrationGoal: hydrationGoal ?? this.hydrationGoal,
+      mealsGoal: mealsGoal ?? this.mealsGoal,
     );
   }
 }
@@ -59,12 +74,52 @@ class MetricsState {
 // ─── Notifier ─────────────────────────────────────────────────────────────────
 
 class MetricsNotifier extends StateNotifier<MetricsState> {
+  String? _userId;
+
   MetricsNotifier()
       : super(MetricsState(
-          energy: 0.75,
+          energy: 0.65,
           sleep: 0.60,
-          focus: 0.80,
+          focus: 0.70,
         ));
+
+  /// Charge les métriques du jour depuis le stockage local
+  Future<void> loadForUser(String userId) async {
+    _userId = userId;
+
+    // Charger les paramètres utilisateur
+    final settings = await PersistenceService.instance.loadUserSettings(userId);
+
+    // Charger les métriques du jour
+    final daily = await PersistenceService.instance.loadDailyMetrics(userId);
+
+    state = MetricsState(
+      energy: daily?.energy ?? settings.baseEnergy,
+      sleep: daily?.sleep ?? settings.baseSleep,
+      focus: daily?.focus ?? settings.baseFocus,
+      lastAdvice: daily?.lastAdvice,
+      totalCaloriesToday: daily?.totalCalories ?? 0,
+      mealsToday: daily?.mealsCount ?? 0,
+      hydrationLiters: daily?.hydrationLiters ?? 0.0,
+      proteinGrams: daily?.proteinGrams ?? 0,
+      carbsGrams: daily?.carbsGrams ?? 0,
+      fatGrams: daily?.fatGrams ?? 0,
+      calorieGoal: settings.calorieGoal,
+      hydrationGoal: settings.hydrationGoal,
+      mealsGoal: settings.mealsGoal,
+    );
+  }
+
+  /// Recharge les paramètres utilisateur (ex: après modification profil)
+  Future<void> reloadSettings(String userId) async {
+    _userId = userId;
+    final settings = await PersistenceService.instance.loadUserSettings(userId);
+    state = state.copyWith(
+      calorieGoal: settings.calorieGoal,
+      hydrationGoal: settings.hydrationGoal,
+      mealsGoal: settings.mealsGoal,
+    );
+  }
 
   void updateMetrics(
       double dEnergy, double dSleep, double dFocus, String advice) {
@@ -74,6 +129,7 @@ class MetricsNotifier extends StateNotifier<MetricsState> {
       focus: (state.focus + dFocus).clamp(0.0, 1.0),
       lastAdvice: advice,
     );
+    _persist();
   }
 
   void addMealData({
@@ -89,11 +145,34 @@ class MetricsNotifier extends StateNotifier<MetricsState> {
       carbsGrams: state.carbsGrams + carbs,
       fatGrams: state.fatGrams + fat,
     );
+    _persist();
   }
 
   void addHydration(double liters) {
     state = state.copyWith(
       hydrationLiters: (state.hydrationLiters + liters).clamp(0.0, 5.0),
+    );
+    _persist();
+  }
+
+  /// Sauvegarde les métriques en local
+  void _persist() {
+    final uid = _userId;
+    if (uid == null) return;
+    PersistenceService.instance.saveDailyMetrics(
+      uid,
+      DailyMetricsData(
+        totalCalories: state.totalCaloriesToday,
+        mealsCount: state.mealsToday,
+        hydrationLiters: state.hydrationLiters,
+        proteinGrams: state.proteinGrams,
+        carbsGrams: state.carbsGrams,
+        fatGrams: state.fatGrams,
+        energy: state.energy,
+        sleep: state.sleep,
+        focus: state.focus,
+        lastAdvice: state.lastAdvice,
+      ),
     );
   }
 }
